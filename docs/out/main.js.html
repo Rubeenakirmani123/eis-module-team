@@ -1,0 +1,356 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>JSDoc: Source: main.js</title>
+
+    <script src="scripts/prettify/prettify.js"> </script>
+    <script src="scripts/prettify/lang-css.js"> </script>
+    <!--[if lt IE 9]>
+      <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+    <link type="text/css" rel="stylesheet" href="styles/prettify-tomorrow.css">
+    <link type="text/css" rel="stylesheet" href="styles/jsdoc-default.css">
+</head>
+
+<body>
+
+<div id="main">
+
+    <h1 class="page-title">Source: main.js</h1>
+
+    
+
+
+
+    
+    <section>
+        <article>
+            <pre class="prettyprint source linenums"><code>/*
+ * File : main.js
+ * Description: Main JS file for all partial forms related to members of the team
+ * Author: Nazoo Akhter
+ * Company: EAO IT SERVICES
+ * 
+ * History:
+ * Created  - 17-Oct-2017
+ */
+/*
+ * @config 
+ */
+var g_server_url = 'http://192.168.43.25/github/team-module/server/eis-team-controller.php';
+g_server_url = 'http://localhost/github-projs/eis-module-team/server/index.php';
+
+
+/*
+ * @class This class provides UI Thread functionality which includes
+ * 1 - Display List of Users in table format
+ * 2 - Team Profile
+ * 3 - Attach Dynamic Event Handlers
+ * 4 - Create Dynamic Views
+ * 5 - 
+ */
+function EisUIClass() {
+
+    this.HandleErrorMessage = function (msg, elemID) {
+
+    };
+
+    /**
+     * Attaches on Click Button Handler to the given element id
+     * @function
+     * @param {string} id - Element Id
+     */
+    this.AddBtnHandler = function (id) {
+        $("#" + id).on('click', function () {
+            var mem_id = $("#" + id).val();
+            $.ajax({
+                method: "get",
+                url: g_server_url + '?msg_id=3&amp;mem_id=' + mem_id,
+                success: function (data) {
+                    console.log(data);
+                    alert("Response for delete request")
+
+                },
+                error: function (data) {
+                    alert("Gadbad - delete");
+                }
+            });
+        });
+    };
+
+
+    /**
+     * DisplayMemberList - Create html Table with member information
+     * @function
+     * @param {string} members - Json Object Array of Members
+     * @param {string} elementID - Html element ID to which table is attached
+     * @returns {Undefined}
+     */
+    this.DisplayMemberList = function (members, elementID) {
+        var html = "&lt;div class='eis-admin-container' id='displaymember'> &lt;div> ";
+        html += "&lt;table class='table table-striped'>&lt;thead>&lt;tr>&lt;th>&lt;strong>Image&lt;/strong>&lt;/th>&lt;th>&lt;strong>Name&lt;/strong>&lt;/th>&lt;th>&lt;strong>Designation&lt;/th>&lt;th>&lt;strong>Actions&lt;/th>&lt;/tr>";
+        for (var i = 0; i &lt; members.length; i++) {
+            html += "&lt;tr>&lt;td>";
+            var id = members[i].id;
+            if (members[i].img_url == undefined) {
+                html += "&lt;img class='img-circle' src= '" + "img/default.png" + "'>";
+            } else {
+                html += "&lt;img class='img-circle' src= '" + members[i].img_url + "'>";
+            }
+            html += "&lt;/td>";
+            html += "&lt;td>&lt;input type=text  readonly value= '" + members[i].name + "'>&lt;/td>";
+            html += "&lt;td>" + members[i].designation + "&lt;/td>";
+
+            //Check for status
+            var status_label = 'Disable';
+            if (members[i].status == 0) {
+                status_label = 'Enable';
+            }
+
+            html += "&lt;td>"
+            html += "&lt;button id='btn_up_" + id + "'>Update&lt;/button>";
+            html += "&lt;button id='btn_del_" + id + "' value='" + id + "'>Delete&lt;/button>";
+
+            html += "&lt;button id='btn_status_" + id + "' value=''>" + status_label + "&lt;/button>";
+            html += "&lt;/td>";
+            html += "&lt;/tr>";
+
+        }
+
+        html += "&lt;/table>";
+        html += "&lt;/div>";
+        html += "&lt;/div>";
+        document.getElementById(elementID).innerHTML = html;
+
+        for (var i = 0; i &lt; members.length; i++) {
+            this.AddDeleteHandler("btn_del_" + members[i].id);
+            this.AddUpdateHandler("btn_update_" + members[i].id);
+            this.AddStatusHandler("btn_status_" + members[i].id);
+        }
+
+    };
+
+    this.AddUpdateHandler = function (elemId) {
+        $("#" + elemId).on('click', function () {
+            var mem_id = $("#" + elemId).val();
+            $("#update-content").load('partials/update-member-view.php');
+            this.PopulateUpdateForm(mem_id);
+        });
+    }
+
+    /**
+     * @function  PopulateUpdateForm
+     * @description This function supplies input to update form
+     * @param {string} mem_id  Id of the team member
+     * @returns {undefined}
+     */
+    this.PopulateUpdateForm = function (mem_id) {
+        $("#update_name").val('Bilal Wani');
+    };
+
+    this.AddDeleteHandler = function (elemId) {
+        $("#" + elemId).on('click', function () {
+            var mem_id = $("#" + elemId).val();
+            $.ajax({
+                method: "get",
+                url: g_server_url + '?msg_id=5&amp;mem_id=' + mem_id,
+                success: function (data) {
+                    console.log(data);
+                    alert("Member Deleted");
+                    location.reload();
+//                DisplayMemberList(JSON.parse(data));
+                },
+                error: function (data) {
+                    alert("Gadbad - delete");
+                }
+            });
+        });
+    };
+
+
+    /**
+     * @function ProcessMembers
+     * @description This function sends the ajax request to get all team members from
+     *              the server. The response calls DisplayMemberList method to show the results.
+     * @param 
+     * @returns {undefined}
+     */
+    this.ProcessMembers = function () {
+        $.ajax({
+            method: "get",
+            url: g_server_url + '?msg_id=1',
+            success: function (data) {
+//            alert("Ureka!!!");
+                console.log(data);
+                var obj = new EisUIClass();
+                obj.DisplayMemberList(JSON.parse(data), 'members');
+            },
+            error: function (data) {
+                alert("Gadbad ProcessMembers");
+            }
+        });
+    };
+
+    this.DisplayMembers = function (members) {
+        var html = "&lt;div class='eis-team-container'>";
+        for (var i = 0; i &lt; members.length; i++) {
+            html += "&lt;div class='eis-team-profile'> &lt;div class='team-wrapper'>";
+            if (members[i].img_url == undefined) {
+                html += "&lt;img src= '" + "img/default.png" + "'>";
+            } else {
+                html += "&lt;img src= '" + members[i].img_url + "'>";
+            }
+
+            html += "&lt;div class='team-des'>";
+            html += "&lt;h2>" + members[i].name + "&lt;/h2>";
+            html += "&lt;p>" + members[i].designation + "&lt;/p>";
+            html += "&lt;/div>";
+            html += "&lt;/div>";
+            html += "&lt;/div>";
+        }
+
+        html += "&lt;/div>";
+        document.getElementById('output').innerHTML = html;
+    };
+
+    /**
+     * Initiates request to fetch member information from server.
+     * On success, generates the profile view using DisplayMembers
+     * @returns {undefined}
+     */
+    this.LoadMembers = function () {
+        $.ajax({
+            method: "get",
+            url: g_server_url + '?msg_id=1',
+            success: function (data) {
+                if (EIS_DEBUG) {
+                    console.log(data);
+                }
+                DisplayMembers(JSON.parse(data));
+            },
+            error: function (data) {
+                alert("Gadbad");
+            }
+        });
+    };
+
+    /**
+     * Handles the update request from the client using ID of the member.
+     * On success, it fetches the member details and shows in the form
+     * 
+     * @param {int} elemId - ID of the member
+     * 
+     * @returns {undefined}
+     */
+    this.ProcessUpdateRequest = function (elemId) {
+        $("#" + elemId).on('click', function () {
+            var mem_id = $("#" + elemId).val();
+            $.ajax({
+                method: "get",
+                url: g_server_url + '?msg_id=4&amp;mem_id=' + mem_id,
+                success: function (data) {
+                    if (EIS_DEBUG) {
+                        console.log(data);
+                        alert("Member Updated");
+                    }
+                    
+                    location.reload();
+                    GetMemberDetails(JSON.parse(data));
+                },
+                error: function (data) {
+                    alert("Gadbad - Updated");
+                }
+            });
+        });
+    };
+
+    /**
+     * Handles the status update for the member.
+     * If the status is enable, then possible action is to disable it and 
+     * vice versa.
+     * 
+     * @param {int} elemId
+     * @returns {none}
+     */
+    this.AddStatusHandler = function (elemId) {
+        $("#" + elemId).on('click', function () {
+            var mem_id = $("#" + elemId).val();
+            var label = $("#" + elemId).val();
+            var status = 0;
+
+            if (label === "Enable") {
+                status = 1;
+            }
+            $.ajax({
+                method: "get",
+                url: g_server_url + '?msg_id=7&amp;mem_id=' + mem_id + "&amp;status=" + status,
+                success: function (data) {
+//            alert("Ureka!!!");
+                    console.log(data);
+                    alert("Status Updated");
+                    location.reload();
+//                DisplayMemberList(JSON.parse(data));
+                },
+                error: function (data) {
+                    alert("Gadbad - delete");
+                }
+            });
+        });
+    };
+
+
+
+
+    this.ShowAdminPage = function () {
+        $("#content").load('partials/list-members-view.php');
+    }
+
+}
+
+$(document).ready(function () {
+    var objUI = new EisUIClass();
+    $("#idListMembers").on('click', function (e) {
+        e.preventDefault();
+        $("#content").load('partials/list-members-view.php');
+
+    });
+
+    $("#idAddMember").on('click', function (e) {
+        e.preventDefault();
+        $("#content").load('partials/create-member-view.php');
+    });
+
+    $("#idUpdateMember").on('click', function (e) {
+        e.preventDefault();
+        $("#content").load('partials/list-members-view.php');
+    });
+
+    $("#idDelMember").on('click', function (e) {
+        e.preventDefault();
+        $("#content").load('partials/list-members-view.php');
+    });
+
+});</code></pre>
+        </article>
+    </section>
+
+
+
+
+</div>
+
+<nav>
+    <h2><a href="index.html">Home</a></h2><h3>Global</h3><ul><li><a href="global.html#AddBtnHandler">AddBtnHandler</a></li><li><a href="global.html#AddStatusHandler">AddStatusHandler</a></li><li><a href="global.html#DisplayMemberList">DisplayMemberList</a></li><li><a href="global.html#LoadMembers">LoadMembers</a></li><li><a href="global.html#PopulateUpdateForm">PopulateUpdateForm</a></li><li><a href="global.html#ProcessMembers">ProcessMembers</a></li><li><a href="global.html#ProcessUpdateRequest">ProcessUpdateRequest</a></li></ul>
+</nav>
+
+<br class="clear">
+
+<footer>
+    Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 3.5.5</a> on Sun Oct 22 2017 17:27:03 GMT+0530 (India Standard Time)
+</footer>
+
+<script> prettyPrint(); </script>
+<script src="scripts/linenumber.js"> </script>
+</body>
+</html>
